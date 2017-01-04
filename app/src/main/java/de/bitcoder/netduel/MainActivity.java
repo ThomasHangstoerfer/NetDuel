@@ -4,8 +4,13 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 //import android.support.v7.app.ActionBar;
 //import android.support.v7.app.AppCompatActivity;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,6 +23,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
 
+import static android.provider.AlarmClock.EXTRA_MESSAGE;
 import static android.view.MotionEvent.ACTION_DOWN;
 
 /**
@@ -25,6 +31,8 @@ import static android.view.MotionEvent.ACTION_DOWN;
  * status bar and navigation/system bar) with user interaction.
  */
 public class MainActivity extends Activity {
+    private static final String TAG = "MainActivity";
+
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -48,6 +56,13 @@ public class MainActivity extends Activity {
     private TextView mNetCommTextView;
     private EditText mIpEditText;
     private EditText mPortEditText;
+    private EditText mUserNameEditText;
+    private String userName = "Anonymous";
+
+    private GameModel game = GameModel.getInstance();
+    private PlayerModel player = null;
+
+    private NetCommAsyncTask netCommServerTask = null;
 
     private final Runnable mHidePart2Runnable = new Runnable() {
         @SuppressLint("InlinedApi")
@@ -86,7 +101,7 @@ public class MainActivity extends Activity {
         }
     };
 
-    private NetCommAsyncTask netCommServerTask = null;
+
     /**
      * Touch listener to use for in-layout UI controls to delay hiding the
      * system UI. This is to prevent the jarring behavior of controls going away
@@ -105,7 +120,7 @@ public class MainActivity extends Activity {
                     case R.id.start_server:
                         if ( netCommServerTask != null )
                         {
-                            Log.w("MainActivity", "Stop Server");
+                            log(TAG, "Stop Server");
                             ((Button)view).setText(R.string.start_server);
                             netCommServerTask.cancel(true);
                             netCommServerTask.stop();
@@ -113,19 +128,21 @@ public class MainActivity extends Activity {
                         }
                         else
                         {
-                            Log.w("MainActivity", "Start Server " + getLocalIpAddress() );
-                            mNetCommTextView.append(getLocalIpAddress()+"\n");
+                            log(TAG, "Start Server " + getLocalIpAddress() );
                             int port = 12345;
 
                             netCommServerTask = new NetCommAsyncTask(MainActivity.this, mNetCommTextView, true, "", port );
                             netCommServerTask.execute("test1", "test2", "test3");
                             ((Button)view).setText(R.string.stop_server);
+
+                            player = game.addPlayer(userName);
                         }
                         break;
                     case R.id.connect_to_server_button:
                         int port = Integer.parseInt(mPortEditText.getText().toString());
                         netCommServerTask = new NetCommAsyncTask(MainActivity.this, mNetCommTextView, false, mIpEditText.getText().toString(), port );
                         netCommServerTask.execute("test1", "test2", "test3");
+
                         break;
                     default:
                         break;
@@ -157,12 +174,34 @@ public class MainActivity extends Activity {
 
         setContentView(R.layout.activity_main);
 
+        SharedPreferences settings = getSharedPreferences("NetDualPrefs", 0);
+        userName = settings.getString("userName", "Anonymous");
+
         mVisible = true;
         mControlsView = findViewById(R.id.fullscreen_content_controls);
         mContentView = findViewById(R.id.fullscreen_content);
         mTextView = (TextView) findViewById(R.id.textView);
         mIpEditText = (EditText) findViewById(R.id.ip_editText);
         mPortEditText = (EditText) findViewById(R.id.port_editText);
+        mUserNameEditText = (EditText) findViewById(R.id.user_name_editText);
+        mUserNameEditText.setText(userName);
+        mUserNameEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+                SharedPreferences settings = getSharedPreferences("NetDualPrefs", 0);
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putString("userName", s.toString() );
+                editor.commit();
+            }
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+            });
+
         mIpEditText.setText("192.168.178.65");
         mPortEditText.setText("12345");
 
@@ -175,6 +214,8 @@ public class MainActivity extends Activity {
                 toggle();
             }
         });
+
+        game.newGame();
 
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
@@ -215,6 +256,11 @@ public class MainActivity extends Activity {
         mHideHandler.postDelayed(mHidePart2Runnable, UI_ANIMATION_DELAY);
     }
 
+    public void log(String tag, String msg) {
+        Log.v(tag, msg);
+        mNetCommTextView.append(tag + ": " + msg+"\n");
+    }
+
     @SuppressLint("InlinedApi")
     private void show() {
         // Show the system bar
@@ -236,4 +282,64 @@ public class MainActivity extends Activity {
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
 
+    public void handleMessage(String msg) {
+        Log.d(this.TAG, String.format("handleMessage(%s)", msg));
+
+        String[] separated = msg.split(" ");
+        String cmd = separated[0].trim();
+        switch (cmd)
+        {
+            case "hello":
+                log(TAG, "Client has connected and said 'hello'");
+                netCommServerTask.sendMessage("welcome player. What's your name?");
+                break;
+            case "welcome player":
+                log(TAG, "Connected to server");
+                netCommServerTask.sendMessage(String.format("name %s", userName) );
+                break;
+            case "name":
+                if ( separated.length > 1 ) {
+                    netCommServerTask.sendMessage("Hello " + separated[1]);
+                    log(TAG, "'"+separated[1]+"' joined the game");
+                    player = game.addPlayer(separated[1]);
+                    if ( player != null )
+                        netCommServerTask.sendMessage("yourTurn " + player.getName() );
+
+
+                    Intent intent = new Intent(this, GameActivity.class);
+                    //EditText editText = (EditText) findViewById(R.id.edit_message);
+                    //String message = editText.getText().toString();
+                    //intent.putExtra(EXTRA_MESSAGE, message);
+                    startActivity(intent);
+                }
+                break;
+            case "yourTurn":
+                if ( separated.length > 1 ) {
+                    if (userName == separated[1]) {
+                        log(TAG, "Server expects our turn");
+                        String shoot_cmd = String.format("shoot " + player.getName() + ":%i power:%i", 45, 100);
+                        log(TAG, shoot_cmd );
+                        netCommServerTask.sendMessage(shoot_cmd);
+                    }
+                }
+                else
+                {
+                    netCommServerTask.sendMessage("Invalid command: " + msg);
+                }
+                break;
+            case "shoot":
+                if ( separated.length > 3 ) {
+                    log(TAG, "'"+separated[1]+"' shot angle:"+separated[2] + " power:"+separated[3]);
+                    game.shoot(player, separated[2], separated[3]);
+                }
+                else
+                {
+                    netCommServerTask.sendMessage("Invalid command: " + msg);
+                }
+                break;
+            default:
+                Log.d(this.TAG, String.format("Unknown command '%s'", cmd));
+                break;
+        }
+    }
 }

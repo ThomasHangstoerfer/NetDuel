@@ -23,8 +23,8 @@ import java.net.Socket;
  */
 
 public class NetCommAsyncTask extends AsyncTask<String, Void, String> {
-    private static final String TAG = "MyAsyncTask";
-    Activity activity;
+    private static final String TAG = "NetCommAsyncTask";
+    MainActivity activity;
     TextView textView;
     IOException ioException;
     StringBuilder outputStringBuilder;
@@ -33,10 +33,14 @@ public class NetCommAsyncTask extends AsyncTask<String, Void, String> {
     String server_ip;
     int server_port;
     private boolean isServer;
+    PrintWriter sendWriter;
+    Thread sendThread = null;
+    Object waiter = new Object();
+    String message = null;
 
     public NetCommAsyncTask(Activity activity, TextView textView, boolean isServer, String server_ip/* can be empty if server*/, int server_port) {
         super();
-        this.activity = activity;
+        this.activity = (MainActivity) activity;
         this.textView = textView;
         this.isServer = isServer;
         this.server_ip = server_ip;
@@ -44,23 +48,57 @@ public class NetCommAsyncTask extends AsyncTask<String, Void, String> {
         this.ioException = null;
         this.listener = null;
         this.socket = null;
+
+        sendThread = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    while(true) {
+                        synchronized (waiter)
+                        {
+                            waiter.wait();
+                        }
+                        if ( message != null )
+                            sendWriter.println(message);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        sendThread.start();
     }
 
     public void stop()
     {
         try{
             socket.close();
-            listener.close();
+
+            if ( listener != null )
+                listener.close();
 
             activity.runOnUiThread(new Runnable() {
                 public void run() {
-                    NetCommAsyncTask.this.textView.append("Server stopped\n");
+                    activity.log(TAG, "Server stopped");
                 }
             });
         }
         catch (Exception e)
         {
             e.printStackTrace();
+        }
+    }
+
+    public void sendMessage(String msg) {
+        if ( sendWriter != null)
+        {
+            Log.d(this.TAG, String.format("sendMessage('%s')", msg));
+            message = msg;
+            //sendWriter.println(msg);
+            synchronized (waiter) {
+                waiter.notifyAll();
+
+            }
         }
     }
 
@@ -78,24 +116,35 @@ public class NetCommAsyncTask extends AsyncTask<String, Void, String> {
                 else
                 {
                     InetAddress serverAddr = InetAddress.getByName(server_ip);
-                    Log.d(this.TAG, String.format("Connecting to server %s:%d", server_ip, server_port));
+                    activity.log(TAG, String.format("Connecting to server %s:%d", server_ip, server_port));
                     socket = new Socket(serverAddr, server_port);
                 }
 
-                Log.d(this.TAG, String.format("client connected from: %s", socket.getRemoteSocketAddress().toString()));
                 activity.runOnUiThread(new Runnable() {
                     public void run() {
-                        NetCommAsyncTask.this.textView.append("Client connected: " + socket.getRemoteSocketAddress().toString() +"\n");
+                        activity.log(TAG, "Client connected: " + socket.getRemoteSocketAddress().toString());
                     }
                 });
 
                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 BufferedWriter bwr = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                PrintWriter pwrout = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
-                pwrout.println("Hey Server!");
-                PrintStream out = new PrintStream(socket.getOutputStream());
+                sendWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+
+                if ( !isServer)
+                    sendMessage("hello");
+
+                //PrintStream out = new PrintStream(socket.getOutputStream());
                 for (String inputLine; (inputLine = in.readLine()) != null;) {
                     Log.d(this.TAG, "received:" + inputLine);
+                    final String s = inputLine;
+
+                    activity.runOnUiThread(new Runnable() {
+                        public void run() {
+                            activity.handleMessage(s);
+                        }
+                    });
+
+                    /*
                     outputStringBuilder = new StringBuilder("");
                     char inputLineChars[] = inputLine.toCharArray();
                     for (char c : inputLineChars) {
@@ -103,12 +152,13 @@ public class NetCommAsyncTask extends AsyncTask<String, Void, String> {
                         outputStringBuilder.append(Character.toChars(c ));
                     }
                     out.println(outputStringBuilder);
-
                     activity.runOnUiThread(new Runnable() {
                         public void run() {
-                            NetCommAsyncTask.this.textView.append(outputStringBuilder+"\n");
+                            activity.log(outputStringBuilder);
                         }
                     });
+
+                    */
                 }
             }
         } catch(IOException e) {

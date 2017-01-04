@@ -24,7 +24,8 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
+        android:fitsSystemWindows="true"
+        android:id="@+id/outerFrameLayout">
 
         <LinearLayout
             android:id="@+id/fullscreen_content_controls"
@@ -41,6 +42,29 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1">
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1">
+
+                    <TextView
+                        android:text="Player Name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/textView2"
+                        android:layout_weight="1" />
+
+                    <EditText
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPersonName"
+                        android:ems="10"
+                        android:id="@+id/user_name_editText"
+                        android:layout_weight="1" />
+
+                </LinearLayout>
 
                 <LinearLayout
                     android:orientation="horizontal"
@@ -90,8 +114,8 @@
                         android:ems="10"
                         android:id="@+id/ip_editText"
                         android:layout_weight="0.8"
-                        android:inputType="numberDecimal"
-                        android:digits="0123456789." />
+                        android:digits="0123456789."
+                        android:inputType="text" />
 
                     <EditText
                         android:layout_width="wrap_content"

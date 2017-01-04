@@ -1,0 +1,22 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0099cc"
+    tools:context="de.bitcoder.netduel.GameActivity">
+
+    <!-- The primary full-screen view. This can be replaced with whatever view
+         is needed to present your content, e.g. VideoView, SurfaceView,
+         TextureView, etc. -->
+
+    <!-- This FrameLayout insets its children based on system windows using
+         android:fitsSystemWindows. -->
+
+    <view
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        class="de.bitcoder.netduel.GameView"
+        android:id="@+id/view"
+        android:text="TextView"
+        style="@style/AppTheme" />
+</FrameLayout>
