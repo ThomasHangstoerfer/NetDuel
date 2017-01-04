@@ -23,6 +23,22 @@ public class GameModel {
 
     private GameModel() {}
 
+    public String toString() {
+        String s = new String();
+        s += "GameModel:\n";
+        s += "Player1:\n";
+        if ( player1 == null )
+            s += "null";
+        else
+            s += player1.toString();
+        s += "Player2:\n";
+        if ( player2 == null )
+            s += "null";
+        else
+            s += player2.toString();
+        return s;
+    }
+
     public static GameModel getInstance() {
         if(mInstance == null) {
             mInstance = new GameModel();
@@ -86,6 +102,20 @@ public class GameModel {
         if ( power_split.length > 1 )
             power_split[1].trim();
         player.setPower(Integer.parseInt(power_split[1]));
+    }
+
+    public PlayerModel getPlayerByName(String name)
+    {
+        Log.d(TAG, "getPlayerByName '"+ name + "'");
+        if ( player1.getName().equals(name) )
+            return player1;
+        else if ( player2.getName().equals(name) )
+            return player2;
+        else
+        {
+            Log.e(TAG, "Player '"+ name + "' not found!");
+            return null;
+        }
     }
 
     public PlayerModel getPlayer1() {

@@ -12,6 +12,93 @@
     <!-- This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows. -->
 
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="0.5"
+                android:id="@+id/player1_controls_layout">
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/player1_left_button"
+                    android:layout_weight="0.01"
+                    android:text="@string/arrow_left"
+                    style="?metaButtonBarButtonStyle" />
+
+                <Button
+                    android:text="Fire"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/player1_fire_button"
+                    android:layout_weight="0.01"
+                    style="?metaButtonBarButtonStyle" />
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/player1_right_button"
+                    android:layout_weight="0.01"
+                    android:text="@string/arrow_right"
+                    style="?metaButtonBarButtonStyle" />
+
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="0.5"
+                android:id="@+id/player2_controls_layout">
+
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <Button
+                    android:text="@string/arrow_left"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/player2_left_button"
+                    android:layout_weight="0.01"
+                    style="?metaButtonBarButtonStyle" />
+
+                <Button
+                    android:text="Fire"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/player2_fire_button"
+                    android:layout_weight="0.01"
+                    style="?metaButtonBarButtonStyle" />
+
+                <Button
+                    android:text="@string/arrow_right"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/player2_right_button"
+                    android:layout_weight="0.01"
+                    style="?metaButtonBarButtonStyle" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </LinearLayout>
+
     <view
         android:layout_width="match_parent"
         android:layout_height="match_parent"

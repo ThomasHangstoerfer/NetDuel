@@ -1,5 +1,7 @@
 package de.bitcoder.netduel;
 
+import android.util.Log;
+
 /**
  * Created by thomas on 03.01.2017.
  */
@@ -12,6 +14,14 @@ public class PlayerModel {
     private int power = 100;
     public int score = 0;
 
+    public String toString() {
+        String s = new String();
+        s += "name: " + name + "\n";
+        s += String.format("angle: %d\n", angle);
+        s += String.format("power: %d\n", power);
+        s += String.format("score: %d\n", score);
+        return s;
+    }
     public void setName(String new_name) {
         this.name = new_name;
     }
@@ -24,7 +34,9 @@ public class PlayerModel {
     }
 
     public void setAngle(int angle) {
-        this.angle = angle;
+        Log.d(TAG, String.format("setAngle(%d)", angle));
+        if ( angle <= 90 && angle >= -90 )
+            this.angle = angle;
     }
 
     public int getPower() {

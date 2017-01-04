@@ -144,6 +144,14 @@ public class MainActivity extends Activity {
                         netCommServerTask.execute("test1", "test2", "test3");
 
                         break;
+                    case R.id.start_2player_button: {
+                        game.addPlayer("Player1");
+                        game.addPlayer("Player2");
+                        Intent intent = new Intent(MainActivity.this, GameActivity.class);
+                        intent.putExtra("GAME_TYPE", "local");
+                        startActivity(intent);
+                        break;
+                    }
                     default:
                         break;
                 }
@@ -159,7 +167,7 @@ public class MainActivity extends Activity {
                 NetworkInterface intf = en.nextElement();
                 for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
                     InetAddress inetAddress = enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress()&&!inetAddress.isLinkLocalAddress()) { return inetAddress.getHostAddress().toString(); }
+                    if (!inetAddress.isLoopbackAddress()&&!inetAddress.isLinkLocalAddress() && !inetAddress.getHostAddress().toString().contains(":")) { return inetAddress.getHostAddress().toString(); }
                 }
             }
         } catch (SocketException ex) {
@@ -222,6 +230,8 @@ public class MainActivity extends Activity {
         // while interacting with the UI.
         findViewById(R.id.start_server).setOnTouchListener(mDelayHideTouchListener);
         findViewById(R.id.connect_to_server_button).setOnTouchListener(mDelayHideTouchListener);
+        findViewById(R.id.start_2player_button).setOnTouchListener(mDelayHideTouchListener);
+
     }
 
     @Override
@@ -285,37 +295,63 @@ public class MainActivity extends Activity {
     public void handleMessage(String msg) {
         Log.d(this.TAG, String.format("handleMessage(%s)", msg));
 
+        Log.d(TAG, game.toString() );
+
         String[] separated = msg.split(" ");
         String cmd = separated[0].trim();
-        switch (cmd)
-        {
+        switch (cmd) {
             case "hello":
+                /* SERVER */
                 log(TAG, "Client has connected and said 'hello'");
                 netCommServerTask.sendMessage("welcome player. What's your name?");
                 break;
-            case "welcome player":
+            case "welcome":
+                /* CLIENT */
                 log(TAG, "Connected to server");
-                netCommServerTask.sendMessage(String.format("name %s", userName) );
+                netCommServerTask.sendMessage(String.format("name %s", userName));
+                game.addPlayer(userName); // add ourself
                 break;
             case "name":
-                if ( separated.length > 1 ) {
-                    netCommServerTask.sendMessage("Hello " + separated[1]);
-                    log(TAG, "'"+separated[1]+"' joined the game");
-                    player = game.addPlayer(separated[1]);
-                    if ( player != null )
-                        netCommServerTask.sendMessage("yourTurn " + player.getName() );
+                /* SERVER */
+                if (separated.length > 1) {
+                    log(TAG, "'" + separated[1] + "' joined the game");
+                    netCommServerTask.sendMessage("servername " + player.getName());
+                    player = game.addPlayer(separated[1]); // add peer
 
-
-                    Intent intent = new Intent(this, GameActivity.class);
-                    //EditText editText = (EditText) findViewById(R.id.edit_message);
-                    //String message = editText.getText().toString();
-                    //intent.putExtra(EXTRA_MESSAGE, message);
-                    startActivity(intent);
                 }
                 break;
+            case "servername":
+                /* CLIENT */
+                if (separated.length > 1) {
+                    game.addPlayer(separated[1]); // add peer
+                    netCommServerTask.sendMessage("ready");
+                }
+                break;
+            case "ready":
+            {
+                /* SERVER */
+                netCommServerTask.sendMessage("startGame");
+                Intent intent = new Intent(this, GameActivity.class);
+                intent.putExtra("GAME_TYPE", "server");
+                startActivity(intent);
+
+                if (player != null)
+                    netCommServerTask.sendMessage("yourTurn " + player.getName());
+
+                break;
+            }
+            case "startGame":
+            {
+                /* CLIENT */
+                Intent intent = new Intent(this, GameActivity.class);
+                intent.putExtra("GAME_TYPE", "client");
+                startActivity(intent);
+                break;
+            }
             case "yourTurn":
+                /* CLIENT */
                 if ( separated.length > 1 ) {
-                    if (userName == separated[1]) {
+                    if (userName.equals(separated[1]) ) {
                         log(TAG, "Server expects our turn");
                         String shoot_cmd = String.format("shoot " + player.getName() + ":%i power:%i", 45, 100);
                         log(TAG, shoot_cmd );
@@ -328,9 +364,21 @@ public class MainActivity extends Activity {
                 }
                 break;
             case "shoot":
+                /* CLIENT + SERVER */
                 if ( separated.length > 3 ) {
                     log(TAG, "'"+separated[1]+"' shot angle:"+separated[2] + " power:"+separated[3]);
                     game.shoot(player, separated[2], separated[3]);
+                }
+                else
+                {
+                    netCommServerTask.sendMessage("Invalid command: " + msg);
+                }
+                break;
+            case "angle":
+                /* CLIENT + SERVER */
+                if ( separated.length > 2 ) {
+                    log(TAG, "Player "+separated[1]+" set angle to "+separated[2]);
+                    game.getPlayerByName(separated[1]).setAngle(Integer.parseInt(separated[2]));
                 }
                 else
                 {

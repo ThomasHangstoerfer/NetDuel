@@ -171,23 +171,33 @@ public class GameView extends View {
         int gun_base_x, gun_base_y, gun_end_x, gun_end_y;
 
         double gun_length = 35.0;
-        double radians = Math.toRadians(angle);
-        double x2 = gun_length * Math.cos(radians);
-        double y2 = gun_length * Math.sin(radians);
 
-        if ( angle > 0 )
+        if ( angle == 0 )
         {
-            gun_base_x = posX+10;
+            gun_base_x = posX;
             gun_base_y = posY-15;
-            gun_end_x = gun_base_x+(int)x2;
-            gun_end_y = gun_base_y-(int)y2;
+            gun_end_x = posX;
+            gun_end_y = posY-15-(int)gun_length;
         }
         else
         {
-            gun_base_x = posX-10;
-            gun_base_y = posY-15;
-            gun_end_x = gun_base_x-(int)x2;
-            gun_end_y = gun_base_y+(int)y2;
+            double radians = Math.toRadians(angle+90);
+            double x2 = gun_length * Math.cos(radians);
+            double y2 = gun_length * Math.sin(radians);
+            if ( angle < 0 )
+            {
+                gun_base_x = posX+10;
+                gun_base_y = posY-15;
+                gun_end_x = gun_base_x+(int)x2;
+                gun_end_y = gun_base_y-(int)y2;
+            }
+            else
+            {
+                gun_base_x = posX-10;
+                gun_base_y = posY-15;
+                gun_end_x = gun_base_x+(int)x2;
+                gun_end_y = gun_base_y-(int)y2;
+            }
         }
         gunPaint.setColor(paint.getColor());
         canvas.drawLine(gun_base_x, gun_base_y, gun_end_x, gun_end_y, gunPaint); // GUN

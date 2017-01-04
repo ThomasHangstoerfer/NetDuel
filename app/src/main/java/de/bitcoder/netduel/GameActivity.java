@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
+import android.widget.LinearLayout;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -32,6 +34,16 @@ public class GameActivity extends AppCompatActivity {
     private static final int UI_ANIMATION_DELAY = 300;
     private final Handler mHideHandler = new Handler();
     private View mContentView;
+
+    private String gameType;
+    private GameModel game = GameModel.getInstance();
+
+    private Button minusButton;
+    private Button plusButton;
+
+    private Button leftPlusButton;
+    private Button leftMinusButton;
+
     private final Runnable mHidePart2Runnable = new Runnable() {
         @SuppressLint("InlinedApi")
         @Override
@@ -90,6 +102,47 @@ public class GameActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_game);
+
+        gameType = this.getIntent().getStringExtra("GAME_TYPE");
+
+        if ( gameType.equals("local") )
+        {
+            leftPlusButton = (Button) findViewById(R.id.player1_right_button);
+            leftMinusButton = (Button) findViewById(R.id.player1_left_button);
+            leftMinusButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    PlayerModel p = GameActivity.this.game.getPlayer1();
+                    p.setAngle(p.getAngle()+5);
+                }
+            });
+            leftPlusButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    PlayerModel p = GameActivity.this.game.getPlayer1();
+                    p.setAngle(p.getAngle()-5);
+                }
+            });
+
+        }
+        else
+        {
+            LinearLayout ll = (LinearLayout) findViewById(R.id.player1_controls_layout);
+            ll.setVisibility(View.INVISIBLE);
+        }
+        plusButton = (Button) findViewById(R.id.player2_right_button);
+        minusButton = (Button) findViewById(R.id.player2_left_button);
+
+        minusButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                PlayerModel p = GameActivity.this.game.getPlayer2();
+                p.setAngle(p.getAngle()+5);
+            }
+        });
+        plusButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                PlayerModel p = GameActivity.this.game.getPlayer2();
+                p.setAngle(p.getAngle()-5);
+            }
+        });
 
         mVisible = true;
         //mControlsView = findViewById(R.id.fullscreen_content_controls);

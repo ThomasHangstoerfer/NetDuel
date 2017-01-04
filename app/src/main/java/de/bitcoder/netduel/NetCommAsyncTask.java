@@ -89,10 +89,14 @@ public class NetCommAsyncTask extends AsyncTask<String, Void, String> {
         }
     }
 
-    public void sendMessage(String msg) {
+    public void sendMessage(final String msg) {
         if ( sendWriter != null)
         {
-            Log.d(this.TAG, String.format("sendMessage('%s')", msg));
+            activity.runOnUiThread(new Runnable() {
+                public void run() {
+                    activity.log(TAG, String.format("sendMessage('%s')", msg));
+                }
+            });
             message = msg;
             //sendWriter.println(msg);
             synchronized (waiter) {
@@ -116,7 +120,11 @@ public class NetCommAsyncTask extends AsyncTask<String, Void, String> {
                 else
                 {
                     InetAddress serverAddr = InetAddress.getByName(server_ip);
-                    activity.log(TAG, String.format("Connecting to server %s:%d", server_ip, server_port));
+                    activity.runOnUiThread(new Runnable() {
+                        public void run() {
+                            activity.log(TAG, String.format("Connecting to server %s:%d", server_ip, server_port));
+                        }
+                    });
                     socket = new Socket(serverAddr, server_port);
                 }
 

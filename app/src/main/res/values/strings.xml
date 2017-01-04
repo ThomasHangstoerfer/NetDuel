@@ -12,4 +12,8 @@
 
     <string name="title_activity_game">GameActivity</string>
     <string name="dummy_button">Dummy Button</string>
+
+    <string name="arrow_left">&lt;-</string>
+    <string name="arrow_right">-&gt;</string>
+
 </resources>
