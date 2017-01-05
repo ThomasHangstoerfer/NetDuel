@@ -71,6 +71,8 @@ public class GameModel {
         {
             player1 = new PlayerModel();
             player1.setName(name);
+            player1.setAngle(-45);
+            player1.setPlayerNumber(1);
             Log.d(TAG, String.format("Player1 '%s' joined", name));
             return player1;
         }
@@ -78,6 +80,8 @@ public class GameModel {
         {
             player2 = new PlayerModel();
             player2.setName(name);
+            player2.setAngle(45);
+            player2.setPlayerNumber(2);
             Log.d(TAG, String.format("Player2 '%s' joined", name));
             return player2;
         }
@@ -125,4 +129,19 @@ public class GameModel {
     public PlayerModel getPlayer2() {
         return player2;
     }
+
+    public void player1Fire() {
+        player1.fire();
+    }
+
+    public void player2Fire() {
+        player2.fire();
+    }
+
+    public void update() {
+        Log.d(TAG, this.toString());
+        player1.getBullet().update();
+        player2.getBullet().update();
+    }
 }
+

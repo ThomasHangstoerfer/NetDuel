@@ -102,6 +102,18 @@ public class MainActivity extends Activity {
     };
 
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //MyApplication.activityResumed();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        //MyApplication.activityPaused();
+    }
+
     /**
      * Touch listener to use for in-layout UI controls to delay hiding the
      * system UI. This is to prevent the jarring behavior of controls going away

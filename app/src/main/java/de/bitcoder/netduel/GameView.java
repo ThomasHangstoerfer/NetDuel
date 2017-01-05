@@ -9,7 +9,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.text.TextPaint;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 
 /**
@@ -26,6 +25,7 @@ public class GameView extends View {
     Paint player1Paint = new Paint();
     Paint player2Paint = new Paint();
     Paint gunPaint = new Paint();
+    Paint bulletPaint = new Paint();
 
     private TextPaint mTextPaint;
     private float mTextWidth;
@@ -33,6 +33,7 @@ public class GameView extends View {
 
     public Handler frame = new Handler();
     private static final int FRAME_RATE = 40; //25 frames per second
+    //private static final int FRAME_RATE = 1000; //1 frame per second
 
     public GameView(Context context) {
         super(context);
@@ -71,9 +72,9 @@ public class GameView extends View {
             mExampleDrawable.setCallback(this);
         }
 
-        ground_paint .setStrokeWidth(1);
-        ground_paint .setColor(Color.DKGRAY);
-        ground_paint .setStyle(Paint.Style.FILL_AND_STROKE);
+        ground_paint.setStrokeWidth(1);
+        ground_paint.setColor(Color.DKGRAY);
+        ground_paint.setStyle(Paint.Style.FILL_AND_STROKE);
 
         player1Paint.setStrokeWidth(1);
         player1Paint.setColor(Color.GREEN);
@@ -87,6 +88,10 @@ public class GameView extends View {
         //gunPaint.setColor(paint.getColor()); // set in drawPlayer()
         gunPaint.setStyle(Paint.Style.STROKE);
 
+        bulletPaint.setStrokeWidth(1);
+        bulletPaint.setColor(Color.BLACK);
+        bulletPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+
 
         a.recycle();
 
@@ -98,7 +103,19 @@ public class GameView extends View {
         // Update TextPaint and text measurements from attributes
         invalidateTextPaintAndMeasurements();
 
-        Handler h = new Handler();
+        isRunning = true;
+        frame.postDelayed(frameUpdate, FRAME_RATE);
+    }
+
+    private boolean isRunning = false;
+    public void pause()
+    {
+        isRunning = false;
+    }
+
+    public void resume()
+    {
+        isRunning = true;
         frame.postDelayed(frameUpdate, FRAME_RATE);
     }
 
@@ -106,8 +123,10 @@ public class GameView extends View {
         @Override
         synchronized public void run() {
             //frame.removeCallbacks(frameUpdate);
+            game.update();
             GameView.this.invalidate();
-            frame.postDelayed(frameUpdate, FRAME_RATE);
+            if ( GameView.this.isRunning )
+                frame.postDelayed(frameUpdate, FRAME_RATE);
         }
     };
 
@@ -149,8 +168,11 @@ public class GameView extends View {
         int width = this.getMeasuredWidth();
         canvas.drawRect(0, height/2, width, height, ground_paint );
 
-        drawPlayer1(canvas);
-        drawPlayer2(canvas);
+        drawPlayer(canvas, game.getPlayer1(), player1Paint);
+        drawPlayer(canvas, game.getPlayer2(), player2Paint);
+
+        drawBullet(canvas, game.getPlayer1());
+        drawBullet(canvas, game.getPlayer2());
 
         // Draw the example drawable on top of the text.
         if (mExampleDrawable != null) {
@@ -160,11 +182,28 @@ public class GameView extends View {
         }
     }
 
-    private void drawPlayer(Canvas canvas, int posX, int posY, int angle, Paint paint)
+    private void drawBullet(Canvas canvas, PlayerModel player) {
+        BulletModel b = player.getBullet();
+        if ( b.isVisible() )
+        {
+            canvas.drawRect((float)b.getPosX()-5, (float)b.getPosY()-5, (float)b.getPosX()+5, (float)b.getPosY()+5, bulletPaint);
+        }
+    }
+    private void drawPlayer(Canvas canvas, PlayerModel player, Paint paint)
     {
-
         int height = this.getMeasuredHeight();
         int width = this.getMeasuredWidth();
+        if ( player.getPlayerNumber() == 1 )
+            player.setPosX(50);
+        else
+            player.setPosX(width-50);
+
+        player.setPosY(height/2);
+
+        int posX =  player.getPosX();
+        int posY = player.getPosY();
+        int angle = player.getAngle();
+
         canvas.drawRect(posX-20, posY, posX+20, posY-20, paint); // BASE
         canvas.drawRect(posX-10, posY-20, posX+10, posY-30, paint); // TOP
 
@@ -199,29 +238,11 @@ public class GameView extends View {
                 gun_end_y = gun_base_y-(int)y2;
             }
         }
+        player.setGunPosX(gun_end_x);
+        player.setGunPosY(gun_end_y);
         gunPaint.setColor(paint.getColor());
         canvas.drawLine(gun_base_x, gun_base_y, gun_end_x, gun_end_y, gunPaint); // GUN
     }
-
-
-    private void drawPlayer1(Canvas canvas) {
-        int height = this.getMeasuredHeight();
-        int width = this.getMeasuredWidth();
-        if ( this.isInEditMode())
-            drawPlayer(canvas, 50, height/2, 45, player1Paint);
-        else
-            drawPlayer(canvas, 50, height/2, game.getPlayer1().getAngle(), player1Paint);
-    }
-
-    private void drawPlayer2(Canvas canvas) {
-        int height = this.getMeasuredHeight();
-        int width = this.getMeasuredWidth();
-        if ( this.isInEditMode())
-            drawPlayer(canvas, width-50, height/2, -45, player2Paint);
-        else
-            drawPlayer(canvas, width-50, height/2, game.getPlayer2().getAngle(), player2Paint);
-    }
-
 
 
     /**

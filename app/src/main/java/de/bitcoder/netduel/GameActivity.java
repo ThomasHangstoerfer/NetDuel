@@ -38,11 +38,12 @@ public class GameActivity extends AppCompatActivity {
     private String gameType;
     private GameModel game = GameModel.getInstance();
 
-    private Button minusButton;
-    private Button plusButton;
-
+    private Button rightMinusButton;
+    private Button rightPlusButton;
+    private Button rightFireButton;
     private Button leftPlusButton;
     private Button leftMinusButton;
+    private Button leftFireButton;
 
     private final Runnable mHidePart2Runnable = new Runnable() {
         @SuppressLint("InlinedApi")
@@ -109,6 +110,8 @@ public class GameActivity extends AppCompatActivity {
         {
             leftPlusButton = (Button) findViewById(R.id.player1_right_button);
             leftMinusButton = (Button) findViewById(R.id.player1_left_button);
+            leftFireButton = (Button) findViewById(R.id.player1_fire_button);
+
             leftMinusButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     PlayerModel p = GameActivity.this.game.getPlayer1();
@@ -121,6 +124,11 @@ public class GameActivity extends AppCompatActivity {
                     p.setAngle(p.getAngle()-5);
                 }
             });
+            leftFireButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    GameActivity.this.game.player1Fire();
+                }
+            });
 
         }
         else
@@ -128,19 +136,25 @@ public class GameActivity extends AppCompatActivity {
             LinearLayout ll = (LinearLayout) findViewById(R.id.player1_controls_layout);
             ll.setVisibility(View.INVISIBLE);
         }
-        plusButton = (Button) findViewById(R.id.player2_right_button);
-        minusButton = (Button) findViewById(R.id.player2_left_button);
+        rightPlusButton = (Button) findViewById(R.id.player2_right_button);
+        rightMinusButton = (Button) findViewById(R.id.player2_left_button);
+        rightFireButton = (Button) findViewById(R.id.player2_fire_button);
 
-        minusButton.setOnClickListener(new View.OnClickListener() {
+        rightMinusButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 PlayerModel p = GameActivity.this.game.getPlayer2();
                 p.setAngle(p.getAngle()+5);
             }
         });
-        plusButton.setOnClickListener(new View.OnClickListener() {
+        rightPlusButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 PlayerModel p = GameActivity.this.game.getPlayer2();
                 p.setAngle(p.getAngle()-5);
+            }
+        });
+        rightFireButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                GameActivity.this.game.player2Fire();
             }
         });
 
@@ -171,6 +185,20 @@ public class GameActivity extends AppCompatActivity {
         // created, to briefly hint to the user that UI controls
         // are available.
         delayedHide(100);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        GameView gameView = (GameView) findViewById(R.id.view);
+        gameView.resume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        GameView gameView = (GameView) findViewById(R.id.view);
+        gameView.pause();
     }
 
     private void toggle() {

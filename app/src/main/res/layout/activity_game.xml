@@ -12,22 +12,32 @@
     <!-- This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows. -->
 
+    <view
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        class="de.bitcoder.netduel.GameView"
+        android:id="@+id/view"
+        android:text="TextView"
+        style="@style/AppTheme" />
+
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:gravity="bottom">
 
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content">
 
             <LinearLayout
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_weight="0.5"
-                android:id="@+id/player1_controls_layout">
+                android:id="@+id/player1_controls_layout"
+                android:gravity="bottom|left">
 
                 <Button
                     android:layout_width="wrap_content"
@@ -60,11 +70,12 @@
             </LinearLayout>
 
             <LinearLayout
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_weight="0.5"
-                android:id="@+id/player2_controls_layout">
+                android:id="@+id/player2_controls_layout"
+                android:gravity="right">
 
                 <Space
                     android:layout_width="wrap_content"
@@ -99,11 +110,4 @@
         </LinearLayout>
     </LinearLayout>
 
-    <view
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        class="de.bitcoder.netduel.GameView"
-        android:id="@+id/view"
-        android:text="TextView"
-        style="@style/AppTheme" />
 </FrameLayout>
